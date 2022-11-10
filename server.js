@@ -5,6 +5,8 @@
 require("dotenv").config() // load variables from .env into process.env
 const express = require('express'); // backend framework
 const fruits = require("./models/fruits") // import fruits data
+const morgan = require('morgan')
+const methodOverride = require('method-override');
 
 
 //*************************************** */
@@ -14,6 +16,16 @@ const fruits = require("./models/fruits") // import fruits data
 //*************************************** */
 const app = express();
 
+
+// -----------------------
+// Register middleware with the app
+// Midleware are just functions that handle the request and response objects before the routes do
+// -----------------------
+app.use(express.urlencoded({extended:true})) // parse data from form submission into req.body
+
+app.use(morgan("tiny"));
+
+app.use(methodOverride('_method'));
 
 //*************************************** */
 // Routes and Routers
@@ -42,8 +54,27 @@ app.get('/fruits/new', (req, res) => {
 
 // Create Route - POST to /fruits - receive the data from form and create a new fruit then redirect the user back to index
 app.post('/fruits', (req, res) =>{
-    res.json(req.body)
+    if (req.body.readyToEat === "on") {
+        req.body.readyToEat = true;
+    } else {
+        req.body.readyToEat = false;
+    }
+// push the new fruit into the fruits array
+    fruits.push(req.body)
+
+// sends back to the fruits page
+    res.redirect("/fruits")
 })
+
+
+// DESTROY Route - DELETE to /fuits/:id - deletes the specified
+app.delete("/fruits/:id", (req, res) => {
+    //splice the item out of the array
+    fruits.splice(req.params.id, 1)
+    // redirect user back to index
+    res.redirect("/fruits")
+    })
+
 
 
 //SHOW ROUTE - GET to /fruits - Returns a single fruit
